@@ -1,4 +1,5 @@
 const https = require("https");
+const searchHttpsAgent = new https.Agent({ proxyEnv: process.env });
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LocalAIStudio/1.0";
 
@@ -20,6 +21,7 @@ function stripTags(value) {
 function requestText(url, timeoutMs = 12000) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
+      agent: searchHttpsAgent,
       headers: {
         "User-Agent": USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",

@@ -1,5 +1,7 @@
 const http = require("http");
+const searchHttpAgent = new http.Agent({ proxyEnv: process.env });
 const https = require("https");
+const searchHttpsAgent = new https.Agent({ proxyEnv: process.env });
 const dns = require("dns").promises;
 const net = require("net");
 const zlib = require("zlib");
@@ -107,6 +109,7 @@ async function fetchPageContent(rawUrl, options = {}, redirects = 0) {
 
   return new Promise((resolve, reject) => {
     const req = transport.get(parsed, {
+      agent: parsed.protocol === "https:" ? searchHttpsAgent : searchHttpAgent,
       headers: {
         "User-Agent": USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.2",

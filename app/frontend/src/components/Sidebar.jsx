@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useRef, useState, useEffect } from "react";
-import { Image, Box, Mic, Settings, Trash2, AudioLines, SquarePen, PanelLeftClose, Search, X, ChevronRight } from "lucide-react";
+import { Video, Globe2, Image, Box, Mic, Settings, Trash2, AudioLines, SquarePen, PanelLeftClose, Search, X, ChevronRight } from "lucide-react";
 import BrandMark from "./BrandMark";
 
 const SIDEBAR_MIN = 200;
@@ -256,6 +256,8 @@ function Sidebar({
 
   const navItems = [
     { tab: "generator", label: "Images", Icon: Image },
+    { tab: "video", label: "Videos", Icon: Video },
+    { tab: "search", label: "Web search", Icon: Globe2 },
     { tab: "speech", label: "Transcribe", Icon: Mic },
     { tab: "tts", label: "Voice", Icon: AudioLines },
     { tab: "models", label: "Models", Icon: Box },

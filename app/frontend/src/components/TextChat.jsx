@@ -264,10 +264,14 @@ function TextChat({
   });
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.dataTransfer?.files || e.target.files || []);
     if (!files || files.length === 0) return;
 
     files.forEach((file) => {
+      if (file.size > 20 * 1024 * 1024) {
+        showAlert({ title: "File Too Large", message: `"${file.name}" exceeds the 20 MB attachment limit.`, danger: true });
+        return;
+      }
       if (isImage(file)) {
         if (!supportsVision) {
           showAlert({
@@ -312,6 +316,7 @@ function TextChat({
             },
           ]);
         };
+        reader.onerror = () => showAlert({ title: "File Error", message: `Could not read "${file.name}".`, danger: true });
         reader.readAsText(file);
       } else if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
         extractPdfText(file)
@@ -342,7 +347,7 @@ function TextChat({
       }
     });
 
-    e.target.value = "";
+    if (!e.dataTransfer) e.target.value = "";
   };
 
   useEffect(() => {
@@ -919,7 +924,10 @@ function TextChat({
   ];
 
   const composer = (
-    <div className="chat-composer">
+    <div className="chat-composer"
+      onDragOver={(event) => { event.preventDefault(); }}
+      onDrop={(event) => { event.preventDefault(); if (!isBusy) handleFileChange(event); }}
+    >
       {attachments.length > 0 && (
         <div className="chat-attachments">
           {attachments.map((att) => (
@@ -968,9 +976,9 @@ function TextChat({
               type="button"
               className="chat-composer-icon-btn"
               onClick={() => fileInputRef.current?.click()}
-              disabled={!status.ready || isBusy}
+              disabled={isBusy}
               aria-label="Attach files"
-              title={status.ready ? "Attach files (text/code) or images (vision models only)" : "Load a model to attach files"}
+              title="Attach or drop text/code files and PDFs (20 MB each); images require a loaded vision model"
             >
               <Plus size={20} />
             </button>
@@ -978,7 +986,7 @@ function TextChat({
               type="button"
               className={`chat-composer-chip ${useWebSearch ? "active" : ""}`}
               onClick={() => setUseWebSearch((value) => !value)}
-              disabled={!status.ready || isBusy}
+              disabled={isBusy}
               aria-pressed={useWebSearch}
               title={useWebSearch ? "Disable web search" : "Enable web search"}
             >

@@ -183,6 +183,25 @@ Portable-AI-Studio/
 
 ## <a id="getting-started"></a>🚀 Getting Started
 
+### File attachments, web search, and local video
+
+- **Chat files:** Use the + button or drop files onto the chat composer. Text/code files and text-based PDFs can be attached before loading a model, up to 20 MB per file. Load a text model to ask questions about them. Images require a loaded vision model and its matching projector.
+- **Web search:** Open **Web search** in the sidebar to search DuckDuckGo without a chat model, or enable **Web** in chat for answers with search context. Search requires Internet access; in a restricted cloud environment, allow `html.duckduckgo.com` and `duckduckgo.com`. Fetching full result pages also requires access to those pages' domains; otherwise search uses their snippets. Node 24.5+ uses the configured HTTP/HTTPS proxy for search requests.
+- **Local video:** Start [ComfyUI](https://github.com/comfyanonymous/ComfyUI) locally on port 8188 with a working video workflow and its model weights/custom nodes installed. Export the workflow in **API format** (enable ComfyUI developer options if that export is hidden). Open **Videos**, upload the API JSON, select its positive text prompt node, enter a prompt, and generate. The workflow must save MP4, WebM, MOV, or GIF output; the app shows the result and a download link. Models, resolution, duration, seed, and any input images come from the workflow. Input images must already exist in ComfyUI. Jobs are tracked while the studio server stays running; rendered files remain in ComfyUI's output directory. This integration does not install ComfyUI or download video weights. For another local port, set `COMFYUI_URL` before starting the studio server. Only loopback engine addresses are accepted.
+
+For frontend/API development with the environment's Node 24 runtime:
+
+```bash
+cd app/frontend
+npm ci
+npm run build
+cd ../..
+node --test scripts/tests/*.test.cjs
+node scripts/server/serve.cjs
+```
+
+For hot reload, run the API with `FRONTEND_PORT=1422 node scripts/server/serve.cjs` and run `npm run dev` in `app/frontend` in another terminal. Native image/chat/speech inference requires the separate engines and model weights described below.
+
 Ensure you have a modern web browser installed. Follow the quick guide below for your platform:
 
 ### Windows Setup

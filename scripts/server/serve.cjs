@@ -3,6 +3,8 @@
 // serve.cjs — portable static file server + backend process manager
 // Serves app/dist/, manages sd-vulkan.exe lifecycle with correct CLI flags
 
+const { createVideoEngine } = require("./video.cjs");
+const videoEngine = createVideoEngine();
 const http     = require("http");
 const https    = require("https");
 const fs       = require("fs");
@@ -6147,6 +6149,31 @@ const server = http.createServer(async (req, res) => {
 
   if ((req.url.startsWith("/v1/") || req.url.startsWith("/sdapi/")) && ["GET", "POST"].includes(req.method)) {
     return proxyImageBackendRequest(req, res);
+  }
+  if (req.url.startsWith("/api/video/")) {
+    try {
+      const url = new URL(req.url, "http://localhost");
+      if (url.pathname === "/api/video/health" && req.method === "GET") return json(res, 200, await videoEngine.health());
+      if (url.pathname === "/api/video/generate" && req.method === "POST") {
+        const body = await readJsonBody(req, res);
+        if (!body) return;
+        return json(res, 202, await videoEngine.generate(body));
+      }
+      if (url.pathname === "/api/video/status" && req.method === "GET") return json(res, 200, await videoEngine.status(url.searchParams.get("id")));
+      if (url.pathname === "/api/video/file" && req.method === "GET") {
+        const upstream = await videoEngine.file(url.searchParams.get("id"), url.searchParams.get("index"), req.headers.range);
+        const headers = {};
+        for (const name of ["content-type", "content-length", "content-range", "accept-ranges"]) if (upstream.headers[name]) headers[name] = upstream.headers[name];
+        res.writeHead(upstream.statusCode, headers);
+        upstream.on("error", () => res.destroy());
+        res.on("close", () => upstream.destroy());
+        upstream.pipe(res);
+        return;
+      }
+      return json(res, 404, { error: "Unknown video endpoint." });
+    } catch (err) {
+      return json(res, 400, { error: err.message || String(err) });
+    }
   }
   // ── Management API ────────────────────────────────────────────────────────
   // GET /api/health

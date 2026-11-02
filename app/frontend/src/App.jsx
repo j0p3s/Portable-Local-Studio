@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Sidebar from "./components/Sidebar";
+import VideoGenerator from "./components/VideoGenerator";
+import WebSearch from "./components/WebSearch";
 import TopStatusBar from "./components/TopStatusBar";
 import Generator from "./components/Generator";
 import ModelManager from "./components/ModelManager";
@@ -15,6 +17,8 @@ import "./App.css";
 const ROUTE_TO_TAB = {
   chat: "chat",
   images: "generator",
+  videos: "video",
+  search: "search",
   transcribe: "speech",
   voice: "tts",
   models: "models",
@@ -782,6 +786,8 @@ function App() {
         )}
 
         {/* Dynamic Workspace Container */}
+        <div style={{ display: activeTab === "video" ? "flex" : "none", flex: 1, overflow: "hidden" }}><VideoGenerator /></div>
+        <div style={{ display: activeTab === "search" ? "flex" : "none", flex: 1, overflow: "hidden" }}><WebSearch /></div>
         <div style={{ display: activeTab === "generator" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
           <Generator
             homeSignal={imagesHomeSignal}
