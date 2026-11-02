@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import VideoPromptAssistant from './VideoPromptAssistant';
 import '../styles/tools.css';
 
-export default function VideoGenerator() {
+export default function VideoGenerator({ active, textSettings, showConfirm, onImageUnloaded }) {
   const [workflow, setWorkflow] = useState(null);
   const [workflowName, setWorkflowName] = useState('');
   const [promptNode, setPromptNode] = useState('');
@@ -62,6 +63,7 @@ export default function VideoGenerator() {
     <h1>Video generation</h1>
     <p>Generate videos on your machine with ComfyUI and a locally installed video model, such as Wan or LTX-Video. Export a working workflow in API format with a saved video output, then upload it here. The workflow keeps its model, resolution, duration and seed settings.</p>
     <p role="status">{engine} <button type="button" onClick={checkEngine}>Check connection</button></p>
+    <VideoPromptAssistant prompt={prompt} onUsePrompt={setPrompt} disabled={running} active={active} textSettings={textSettings} showConfirm={showConfirm} onImageUnloaded={onImageUnloaded} />
     <form className="studio-tool-form" onSubmit={generate}>
       <label>Video workflow (API JSON, up to 2 MB)<input type="file" accept=".json,application/json" onChange={loadWorkflow} disabled={running} /></label>
       {workflowName && <p>{workflowName}</p>}

@@ -618,7 +618,7 @@ export async function searchWeb(query, options = {}) {
   return await readJsonResponse(res, "The local server returned an invalid web search response.");
 }
 
-export async function downloadLlmModel(url, filename = null, companion = null) {
+export async function downloadLlmModel(url, filename = null, companion = null, options = {}) {
   const res = await fetch("/api/llm/download-model", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -627,6 +627,7 @@ export async function downloadLlmModel(url, filename = null, companion = null) {
       filename,
       projectorUrl: companion?.url || "",
       projectorFilename: companion?.filename || "",
+      overwrite: options.overwrite,
     }),
   });
   return await readJsonResponse(res, "The local server returned an invalid text download response.");

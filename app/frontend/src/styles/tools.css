@@ -12,3 +12,8 @@
 .studio-tool a { color: var(--accent-color, #879dff); }
 .studio-tool video, .studio-tool-result img { max-width: 100%; max-height: 65vh; border-radius: 12px; }
 .studio-tool [role=alert] { color: var(--danger-color, #f88); }
+.video-prompt-assistant { max-width: 900px; margin: 24px 0; padding: 20px; border: 1px solid var(--border-color, #666); border-radius: 12px; }
+.video-prompt-assistant h2 { font-size: 20px; margin-top: 0; }
+.video-prompt-note { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.video-prompt-suggestion { display: grid; gap: 12px; }
+.video-llm-download progress { width: 100%; margin-bottom: 12px; }

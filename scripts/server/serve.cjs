@@ -7,6 +7,10 @@ const { createVideoEngine } = require("./video.cjs");
 const videoEngine = createVideoEngine();
 const http     = require("http");
 const https    = require("https");
+const modelDownloadAgents = {
+  "http:": new http.Agent({ proxyEnv: process.env }),
+  "https:": new https.Agent({ proxyEnv: process.env }),
+};
 const fs       = require("fs");
 const net      = require("net");
 const os       = require("os");
@@ -5452,6 +5456,7 @@ function startModelDownload(url, overrideFilename = null, targetDir = MODELS, ki
   
   const client = url.startsWith("https") ? https : http;
   const request = client.get(url, {
+    agent: ["127.0.0.1", "localhost", "[::1]"].includes(new URL(url).hostname) ? undefined : modelDownloadAgents[new URL(url).protocol],
     headers: {
       "User-Agent": "Uncensored-AI-Studio/1.0 (+https://github.com/techjarves/Uncensored-AI-Studio)",
       "Accept": "application/octet-stream, application/x-safetensors, */*",
@@ -5461,7 +5466,18 @@ function startModelDownload(url, overrideFilename = null, targetDir = MODELS, ki
     activeDownload = { request, fileStream, destPath, tempPath };
     // Handle redirects (HuggingFace resolve URLs redirect to Cloudfront/S3)
     if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
-      const redirectUrl = response.headers.location ? new URL(response.headers.location, url).toString() : "";
+      let redirectUrl = "";
+      try {
+        if (response.headers.location) {
+          const target = new URL(response.headers.location, url);
+          if (!["http:", "https:"].includes(target.protocol)) throw new Error("Unsupported redirect protocol");
+          redirectUrl = target.toString();
+        }
+      } catch (_) {
+        response.resume();
+        failDownload("Model download redirected to an invalid or unsupported URL.");
+        return;
+      }
       if (!redirectUrl) {
         failDownload("Redirect response did not include a Location header");
         return;
@@ -7306,15 +7322,24 @@ async function getLlmfitRecommendations(useCase = "chat", limit = 10) {
     if (!url) return json(res, 400, { ok: false, error: "URL is required" });
     if (downloadState.active) return json(res, 409, { ok: false, error: "Another model download is already active." });
     try {
-      const directUrl = url.includes("huggingface.co") ? url.replace("/blob/", "/resolve/") : url;
-      const overrideFilename = body.filename ? path.basename(String(body.filename)) : null;
-      const filename = overrideFilename || path.basename(new URL(directUrl).pathname);
-      if (!filename.toLowerCase().endsWith(".gguf")) {
-        return json(res, 400, { ok: false, error: "Text model URL must point to a .gguf file." });
+      const parsed = new URL(url.trim());
+      if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) {
+        return json(res, 400, { ok: false, error: "Use a public HTTP or HTTPS model file URL without embedded credentials." });
+      }
+      if (/(^|\.)huggingface\.co$/i.test(parsed.hostname)) {
+        if (!/\/(blob|resolve)\//.test(parsed.pathname)) return json(res, 400, { ok: false, error: "Use a Hugging Face file download link, not a repository page." });
+        parsed.pathname = parsed.pathname.replace("/blob/", "/resolve/");
+      }
+      const directUrl = parsed.toString();
+      const filename = body.filename ? String(body.filename).trim() : decodeURIComponent(path.basename(parsed.pathname));
+      if (!/^[^<>:"/\\|?*\x00-\x1f]+\.gguf$/i.test(filename) || filename.length > 240) {
+        return json(res, 400, { ok: false, error: "Text model filename must end in .gguf and must not contain folders or invalid filename characters." });
       }
       const projector = body.projectorUrl && body.projectorFilename
         ? { url: String(body.projectorUrl), filename: path.basename(String(body.projectorFilename)) }
         : await resolveHuggingFaceProjector(directUrl, filename);
+      if (downloadState.active) return json(res, 409, { ok: false, error: "Another model download is already active." });
+      if (body.overwrite === false && fs.existsSync(path.join(LLM_MODELS, filename))) return json(res, 409, { ok: false, error: "A text model with this filename already exists. Choose another filename." });
       startModelDownload(directUrl, filename, LLM_MODELS, "text");
       return json(res, 200, {
         ok: true,

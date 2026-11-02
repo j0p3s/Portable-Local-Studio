@@ -786,7 +786,7 @@ function App() {
         )}
 
         {/* Dynamic Workspace Container */}
-        <div style={{ display: activeTab === "video" ? "flex" : "none", flex: 1, overflow: "hidden" }}><VideoGenerator /></div>
+        <div style={{ display: activeTab === "video" ? "flex" : "none", flex: 1, overflow: "hidden" }}><VideoGenerator active={activeTab === "video"} textSettings={textSettings} showConfirm={showConfirm} onImageUnloaded={handleImageUnloaded} /></div>
         <div style={{ display: activeTab === "search" ? "flex" : "none", flex: 1, overflow: "hidden" }}><WebSearch /></div>
         <div style={{ display: activeTab === "generator" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
           <Generator
